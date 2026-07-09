@@ -34,7 +34,7 @@ export { uid, defaultState };
  * @param {any} raw
  * @returns {State}
  */
-function migrate(raw) {
+export function migrate(raw) {
 	const base = defaultState();
 	if (!raw || typeof raw !== 'object') return base;
 	// v0 (versionless) -> v1: keep known fields, default the rest.

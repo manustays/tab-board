@@ -1,6 +1,7 @@
 import { h, render as prender } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { loadState, saveState } from './store/store.js';
+import { loadState, saveState, migrate } from './store/store.js';
+import { isSupported, connect, restore, disconnect, readState, writeState } from './store/sync.js';
 import { pagePalette } from './theme/palettes.js';
 import { WIDGET_COMPONENTS, newWidget } from './widgets/registry.js';
 import { initGrid, syncGrid } from './grid/grid.js';
@@ -23,6 +24,9 @@ export function App() {
 	const gridEl = useRef(null);
 	const grid = useRef(/** @type {any} */(null));
 	const interacting = useRef(false); // true mid drag/resize — pause grid reconcile
+	const [syncFolder, setSyncFolder] = useState(/** @type {{handle:any,name:string}|null} */(null));
+	const syncTimer = useRef(/** @type {any} */(null));
+	const syncReady = useRef(false); // gate writes until the mount read resolves
 
 	// tick the clock every 20s
 	useEffect(() => {
@@ -33,6 +37,36 @@ export function App() {
 	// persist on any state change
 	useEffect(() => { saveState(state); }, [state]);
 
+	// one-shot: restore a connected folder and adopt its file if newer
+	useEffect(() => {
+		let cancelled = false;
+		(async () => {
+			if (isSupported()) {
+				const conn = await restore();
+				if (!cancelled && conn) {
+					setSyncFolder(conn);
+					const raw = await readState(conn.handle);
+					if (!cancelled && raw) {
+						const fileState = migrate(raw);
+						setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
+					}
+				}
+			}
+			if (!cancelled) syncReady.current = true;
+		})();
+		return () => { cancelled = true; };
+	}, []);
+
+	// mirror state to the connected folder file (debounced), stamping updatedAt
+	useEffect(() => {
+		if (!syncFolder || !syncReady.current) return;
+		clearTimeout(syncTimer.current);
+		syncTimer.current = setTimeout(() => {
+			writeState(syncFolder.handle, { ...state, updatedAt: Date.now() });
+		}, 250);
+		return () => clearTimeout(syncTimer.current);
+	}, [state, syncFolder]);
+
 	// expose theme to CSS (scrollbars, native controls) via <html> attrs
 	useEffect(() => {
 		document.documentElement.dataset.theme = state.theme;
@@ -41,7 +75,13 @@ export function App() {
 
 	// flush a pending debounced save before the tab is hidden/closed
 	useEffect(() => {
-		const flush = () => saveState.flush();
+		const flush = () => {
+			saveState.flush();
+			if (syncFolder && syncReady.current) {
+				clearTimeout(syncTimer.current);
+				writeState(syncFolder.handle, { ...state, updatedAt: Date.now() });
+			}
+		};
 		const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
 		window.addEventListener('pagehide', flush);
 		document.addEventListener('visibilitychange', onVisibility);
@@ -49,7 +89,7 @@ export function App() {
 			window.removeEventListener('pagehide', flush);
 			document.removeEventListener('visibilitychange', onVisibility);
 		};
-	}, []);
+	}, [syncFolder, state]);
 
 	// patch helpers
 	const patchWidget = (id, partial) => setState((s) => ({ ...s, widgets: s.widgets.map((w) => w.id === id ? { ...w, ...partial } : w) }));
@@ -102,6 +142,18 @@ export function App() {
 		return () => document.removeEventListener('click', close);
 	}, []);
 
+	const onConnectFolder = async () => {
+		const conn = await connect();
+		if (!conn) return;
+		setSyncFolder(conn);
+		const raw = await readState(conn.handle);
+		if (raw) {
+			const fileState = migrate(raw);
+			setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
+		}
+	};
+	const onDisconnectFolder = async () => { await disconnect(); setSyncFolder(null); };
+
 	const pg = pagePalette(state.theme);
 	const maxW = state.width === 'fixed' ? 1120 : 1680;
 
@@ -114,7 +166,8 @@ export function App() {
 					onToggleTheme:() => setState((s) => ({ ...s, theme:s.theme === 'dark' ? 'light' : 'dark' })),
 					onSetWidth:(m) => setState((s) => ({ ...s, width:m })),
 					onSetAccent:(c) => setState((s) => ({ ...s, accent:c })),
-					onAdd:addWidget, menus, onOpenMenu:setMenus })
+					onAdd:addWidget, menus, onOpenMenu:setMenus,
+					syncSupported: isSupported(), syncFolder, onConnectFolder, onDisconnectFolder })
 			),
 			h('div', { class:'grid-stack', ref:gridEl }),
 			h('div', { style:{ marginTop:40, font:"400 12px 'Instrument Sans'", color:pg.head, textAlign:'center' } },
