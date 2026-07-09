@@ -11,6 +11,7 @@ Drop it in as your browser's new-tab page and arrange the widgets you actually u
 - **Offline-first** — installable PWA; after the first load it runs with no network.
 - **Private by default** — no backend, no accounts, no analytics. All data stays in your browser's `localStorage`.
 - **Themeable** — warm, paper-toned palettes with light/dark support and self-hosted fonts (no Google Fonts call).
+- **Folder sync** — optionally connect a local folder (Chromium browsers); TabBoard mirrors its state to `tabboard.json` there and reloads from it on start. Point it at a cloud-synced folder for backendless cross-device sync.
 
 ## Quick start
 
@@ -45,7 +46,6 @@ State persists to `localStorage` under `nt_dashboard_v1`. Widgets are declared i
 
 ## Roadmap
 
-- Local-folder JSON sync
 - AI-agent write path
 - Third-party widgets
 
