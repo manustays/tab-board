@@ -48,7 +48,12 @@ export function syncGrid(grid, widgets, renderInto) {
 			el.setAttribute('gs-id', w.id);
 		} else {
 			el = grid.engine.nodes.find((n) => n.el.getAttribute('gs-id') === w.id).el;
-			grid.update(el, { x:w.x, y:w.y, w:w.w, h:w.h });
+			// only push defined coords: a widget still awaiting its auto-placed
+			// x/y (undefined) must not overwrite gridstack's node with undefined,
+			// which collapses the grid's computed height to NaN.
+			const geo = {};
+			for (const k of ['x', 'y', 'w', 'h']) if (Number.isFinite(w[k])) geo[k] = w[k];
+			grid.update(el, geo);
 		}
 		const contentEl = el.querySelector('.grid-stack-item-content');
 		renderInto(contentEl, w);

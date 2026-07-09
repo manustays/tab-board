@@ -58,7 +58,12 @@ export function App() {
 	// init gridstack once
 	useEffect(() => {
 		grid.current = initGrid(gridEl.current, { staticGrid: !editing });
-		grid.current.on('change', (_e, nodes) => {
+		// 'added' fires for auto-placed new widgets (which have no x/y yet);
+		// 'change' fires for moved/resized items. Both re-read all node coords
+		// back into state so no widget is ever left with undefined x/y — a
+		// widget with undefined y makes gridstack's row count NaN and collapses
+		// the grid container height to 0.
+		grid.current.on('change added', (_e, nodes) => {
 			const read = grid.current.engine.nodes.map((n) => ({ id:n.el.getAttribute('gs-id'), x:n.x, y:n.y, w:n.w, h:n.h }));
 			setState((s) => ({ ...s, widgets: mergeGeometry(s.widgets, read) }));
 		});
