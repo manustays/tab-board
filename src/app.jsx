@@ -32,6 +32,18 @@ export function App() {
 	// persist on any state change
 	useEffect(() => { saveState(state); }, [state]);
 
+	// flush a pending debounced save before the tab is hidden/closed
+	useEffect(() => {
+		const flush = () => saveState.flush();
+		const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
+		window.addEventListener('pagehide', flush);
+		document.addEventListener('visibilitychange', onVisibility);
+		return () => {
+			window.removeEventListener('pagehide', flush);
+			document.removeEventListener('visibilitychange', onVisibility);
+		};
+	}, []);
+
 	// patch helpers
 	const patchWidget = (id, partial) => setState((s) => ({ ...s, widgets: s.widgets.map((w) => w.id === id ? { ...w, ...partial } : w) }));
 	const removeWidget = (id) => { setState((s) => ({ ...s, widgets: s.widgets.filter((w) => w.id !== id) })); setOpenWidgetMenu(null); };
@@ -55,6 +67,7 @@ export function App() {
 		if (!grid.current) return;
 		syncGrid(grid.current, state.widgets, (contentEl, w) => {
 			const Comp = WIDGET_COMPONENTS[w.type];
+			if (!Comp) return; // corrupt/unknown widget type from stale localStorage: skip rendering
 			const common = { w, editing, accent:state.accent, theme:state.theme,
 				menuOpen: openWidgetMenu === w.id, onToggleMenu:() => setOpenWidgetMenu(openWidgetMenu === w.id ? null : w.id),
 				onPatch:(partial) => patchWidget(w.id, partial), onRemove:() => removeWidget(w.id), now };

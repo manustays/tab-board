@@ -23,7 +23,6 @@ export function initGrid(el, opts) {
 /**
  * Reconcile gridstack items to match `widgets`. Adds new, removes gone,
  * updates geometry, and (re)renders content via `renderInto`.
- * Content elements are cached on the item DOM node as `_ntContent`.
  * @param {import('gridstack').GridStack} grid
  * @param {Array<object>} widgets
  * @param {(contentEl:HTMLElement, widget:object)=>void} renderInto

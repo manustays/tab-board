@@ -6,7 +6,7 @@ import { defaultState, uid } from './defaults.js';
  * @property {'bookmarks'|'single'|'datetime'|'divider'|'spacer'} type
  * @property {string} [title]
  * @property {string} [tint]
- * @property {number} x @property {number} y @property {number} w @property {number} h
+ * @property {number} [x] @property {number} [y] @property {number} w @property {number} h
  * @property {'grid'|'list'} [layout]
  * @property {'mono'|'color'|'dot'|'favicon'} [icon]
  * @property {Array<object>} [items]
@@ -60,8 +60,8 @@ export function loadState() {
 	}
 }
 
-let _timer = null;
-let _pending = null;
+let _timer = /** @type {any} */(null);
+let _pending = /** @type {any} */(null);
 
 /**
  * Persist state (debounced ~250ms). Call `saveState.flush()` to write immediately.
