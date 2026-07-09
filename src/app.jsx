@@ -145,12 +145,12 @@ export function App() {
 	const onConnectFolder = async () => {
 		const conn = await connect();
 		if (!conn) return;
-		setSyncFolder(conn);
 		const raw = await readState(conn.handle);
 		if (raw) {
 			const fileState = migrate(raw);
 			setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
 		}
+		setSyncFolder(conn);
 	};
 	const onDisconnectFolder = async () => { await disconnect(); setSyncFolder(null); };
 
