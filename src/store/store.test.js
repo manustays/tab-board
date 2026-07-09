@@ -37,4 +37,12 @@ describe('store', () => {
 		expect(s.version).toBeGreaterThanOrEqual(1);
 		expect(s.theme).toBe('dark');
 	});
+	it('migrate defaults updatedAt to 0 when absent', () => {
+		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[] }));
+		expect(loadState().updatedAt).toBe(0);
+	});
+	it('migrate preserves a provided updatedAt', () => {
+		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[], updatedAt:1234 }));
+		expect(loadState().updatedAt).toBe(1234);
+	});
 });

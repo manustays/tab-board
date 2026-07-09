@@ -20,6 +20,7 @@ import { defaultState, uid } from './defaults.js';
  * @property {'fixed'|'full'} width
  * @property {string} accent
  * @property {string} name
+ * @property {number} updatedAt
  * @property {Widget[]} widgets
  */
 
@@ -43,6 +44,7 @@ function migrate(raw) {
 		width: raw.width === 'full' ? 'full' : 'fixed',
 		accent: typeof raw.accent === 'string' ? raw.accent : base.accent,
 		name: typeof raw.name === 'string' ? raw.name : base.name,
+		updatedAt: typeof raw.updatedAt === 'number' ? raw.updatedAt : 0,
 		widgets: Array.isArray(raw.widgets) && raw.widgets.length ? raw.widgets : base.widgets,
 	};
 }
