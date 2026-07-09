@@ -32,7 +32,7 @@ export function defaultState() {
 				{ id:uid(), label:'Stack Overflow', url:'https://stackoverflow.com',         color:'#e08a3c', ini:'SO' },
 				{ id:uid(), label:'MDN Docs',       url:'https://developer.mozilla.org',     color:'#4b7bc4', ini:'MDN' },
 			]},
-			{ id: uid(), type:'single', title:"Today's Focus", tint:'sky', x:0, y:2, w:3, h:2,
+			{ id: uid(), type:'single', title:"Today's Focus", tint:'sky', x:0, y:2, w:3, h:3,
 				item:{ label:"Today's Focus", url:'https://notion.so', color:'#4b7bc4', ini:'▸', sub:'Pinned bookmark' } },
 		],
 	};

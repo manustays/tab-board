@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: 'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+::selection { background: rgba(201, 100, 66, .22); }
+/* let widget cards fill the gridstack item box */
+.grid-stack-item-content { inset: 0; overflow: visible; }
+.nt-drag { cursor: grab; }

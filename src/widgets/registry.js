@@ -33,7 +33,7 @@ export function newWidget(type, accent) {
 	const id = uid();
 	switch (type) {
 		case 'bookmarks': return { id, type, title:'New group', layout:'grid', icon:'mono', tint:'paper', w:4, h:3, items:[] };
-		case 'single':    return { id, type, title:'Bookmark', tint:'paper', w:3, h:2, item:{ label:'New bookmark', url:'https://', color:accent, ini:'•', sub:'' } };
+		case 'single':    return { id, type, title:'Bookmark', tint:'paper', w:3, h:3, item:{ label:'New bookmark', url:'https://', color:accent, ini:'•', sub:'' } };
 		case 'datetime':  return { id, type, title:'', tint:'paper', w:3, h:2 };
 		case 'divider':   return { id, type, w:12, h:1 };
 		case 'spacer':    return { id, type, w:3, h:2 };

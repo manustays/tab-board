@@ -1,7 +1,4 @@
 import { render, h } from 'preact';
+import { App } from './app.jsx';
 
-function Boot() {
-	return h('div', null, 'New Tab loading…');
-}
-
-render(h(Boot, null), document.getElementById('app'));
+render(h(App, null), document.getElementById('app'));
