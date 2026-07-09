@@ -1,6 +1,6 @@
 import { h, render as prender } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { loadState, saveState, uid } from './store/store.js';
+import { loadState, saveState } from './store/store.js';
 import { pagePalette } from './theme/palettes.js';
 import { WIDGET_COMPONENTS, newWidget } from './widgets/registry.js';
 import { initGrid, syncGrid } from './grid/grid.js';
@@ -23,7 +23,7 @@ export function App() {
 	const gridEl = useRef(null);
 	const grid = useRef(/** @type {any} */(null));
 
-	// tick the clock each minute
+	// tick the clock every 20s
 	useEffect(() => {
 		const t = setInterval(() => setNow(new Date()), 1000 * 20);
 		return () => clearInterval(t);
@@ -73,7 +73,7 @@ export function App() {
 	const pg = pagePalette(state.theme);
 	const maxW = state.width === 'fixed' ? 1120 : 1680;
 
-	return h('div', { onClick:(e) => e.stopPropagation(), style:{ minHeight:'100vh', background:pg.bg, color:pg.fg, transition:'background .3s,color .3s' } },
+	return h('div', { style:{ minHeight:'100vh', background:pg.bg, color:pg.fg, transition:'background .3s,color .3s' } },
 		h('div', { style:{ maxWidth:maxW, margin:'0 auto', padding:'clamp(28px,5vw,56px) clamp(20px,4vw,48px) 80px' } },
 			h('div', { style:{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:24, flexWrap:'wrap', marginBottom:'clamp(28px,4vw,44px)' } },
 				h(Header, { pg, name:state.name, now, editing, onName:(v) => setState((s) => ({ ...s, name:v })) }),

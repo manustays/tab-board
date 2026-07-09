@@ -10,14 +10,14 @@ export function TopBar(props) {
 	return h('div', { style:{ display:'flex', alignItems:'center', gap:4, position:'relative' } },
 		pill(editing ? 'Done' : 'Edit', editing, onToggleEdit),
 		h('button', { onClick:onToggleTheme, title:'Toggle theme', style:iconBtn(pg) }, theme === 'dark' ? '☾' : '☀'),
-		h('button', { onClick:() => onOpenMenu(menus === 'settings' ? null : 'settings'), title:'Settings', style:iconBtn(pg) }, '⚙'),
+		h('button', { onClick:(e) => { e.stopPropagation(); onOpenMenu(menus === 'settings' ? null : 'settings'); }, title:'Settings', style:iconBtn(pg) }, '⚙'),
 		menus === 'settings' ? settingsMenu() : null,
-		h('button', { onClick:() => onOpenMenu(menus === 'add' ? null : 'add'), style:{ border:'none', background:pg.fg, color:pg.bg, borderRadius:9, padding:'7px 13px', font:"500 12px 'Instrument Sans'", cursor:'pointer' } }, '+ Add widget'),
+		h('button', { onClick:(e) => { e.stopPropagation(); onOpenMenu(menus === 'add' ? null : 'add'); }, style:{ border:'none', background:pg.fg, color:pg.bg, borderRadius:9, padding:'7px 13px', font:"500 12px 'Instrument Sans'", cursor:'pointer' } }, '+ Add widget'),
 		menus === 'add' ? addMenu() : null
 	);
 
 	function settingsMenu() {
-		return h('div', { style:menuBox(pg, 56) },
+		return h('div', { onClick:(e) => e.stopPropagation(), style:menuBox(pg, 56) },
 			label('Container width', pg),
 			h('div', { style:{ display:'flex', gap:7, marginBottom:16 } }, ['fixed','full'].map((m) =>
 				h('button', { key:m, onClick:() => onSetWidth(m), style:choice(pg, accent, width === m) }, m === 'fixed' ? 'Centered' : 'Full'))),
@@ -27,7 +27,7 @@ export function TopBar(props) {
 		);
 	}
 	function addMenu() {
-		return h('div', { style:menuBox(pg, 0) }, ADD_MENU.map(([t, l]) =>
+		return h('div', { onClick:(e) => e.stopPropagation(), style:menuBox(pg, 0) }, ADD_MENU.map(([t, l]) =>
 			h('button', { key:t, onClick:() => onAdd(t), style:{ display:'block', width:'100%', textAlign:'left', border:'none', background:'transparent', color:pg.fg, font:"400 13px 'Instrument Sans'", padding:'9px 11px', borderRadius:9, cursor:'pointer' } }, l)));
 	}
 }

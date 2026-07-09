@@ -1,4 +1,5 @@
 import { GridStack } from 'gridstack';
+import { render as prender } from 'preact';
 import 'gridstack/dist/gridstack.min.css';
 
 /**
@@ -31,7 +32,13 @@ export function syncGrid(grid, widgets, renderInto) {
 	const want = new Map(widgets.map((w) => [w.id, w]));
 	// remove gone
 	for (const node of grid.engine.nodes.slice()) {
-		if (!want.has(node.el.getAttribute('gs-id'))) grid.removeWidget(node.el, true);
+		if (!want.has(node.el.getAttribute('gs-id'))) {
+			// ponytail: unmount the Preact subtree before the DOM node goes away, else
+			// widget effects (intervals, listeners) never get their cleanup called.
+			const contentEl = node.el.querySelector('.grid-stack-item-content');
+			if (contentEl) prender(null, contentEl);
+			grid.removeWidget(node.el, true);
+		}
 	}
 	const have = new Set(grid.engine.nodes.map((n) => n.el.getAttribute('gs-id')));
 	grid.batchUpdate();

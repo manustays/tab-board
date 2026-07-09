@@ -17,12 +17,12 @@ export function Card(props) {
 		: h('span');
 
 	const ctrl = editing ? h('div', { style:{ display:'flex', alignItems:'center', gap:2, position:'relative' } },
-		h('button', { onClick:onToggleMenu, style:btn(p) }, '•••'),
+		h('button', { onClick:(e) => { e.stopPropagation(); onToggleMenu(); }, style:btn(p) }, '•••'),
 		menuOpen ? menu() : null
 	) : null;
 
 	function menu() {
-		return h('div', { style:menuStyle(p) },
+		return h('div', { onClick:(e) => e.stopPropagation(), style:menuStyle(p) },
 			extraMenu ? extraMenu() : null,
 			h('div', { style:{ padding:'8px 12px' } },
 				h('div', { style:menuLabel(p) }, 'Background'),
