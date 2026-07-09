@@ -20,7 +20,7 @@ export const WIDGET_COMPONENTS = {
 	snippets: Snippets,
 };
 
-/** Add-widget menu — v1 types only. @type {Array<[string,string]>} */
+/** Add-widget menu. @type {Array<[string,string]>} */
 export const ADD_MENU = [
 	['bookmarks', 'Bookmark group'],
 	['single', 'Single bookmark'],
