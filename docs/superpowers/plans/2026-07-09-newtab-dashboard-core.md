@@ -34,7 +34,7 @@
 
 ```json
 {
-  "name": "newtab-dashboard",
+  "name": "tabboard",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -1631,8 +1631,8 @@ Create `public/icon-192.png` and `public/icon-512.png` (simple mark on the paper
 
 ```json
 {
-	"name": "New Tab Dashboard",
-	"short_name": "New Tab",
+	"name": "TabBoard",
+	"short_name": "TabBoard",
 	"start_url": "./",
 	"display": "standalone",
 	"background_color": "#ebe4d6",
@@ -1712,7 +1712,7 @@ git commit -m "feat: service worker and PWA manifest for offline app shell"
 - [ ] **Step 1: Write `README.md`**
 
 ```markdown
-# New Tab Dashboard
+# TabBoard
 
 A fully-offline, open-source new-tab page: a customizable widget-board of bookmarks and helpers.
 

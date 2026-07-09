@@ -1,6 +1,6 @@
 {
-	"name": "New Tab Dashboard",
-	"short_name": "New Tab",
+	"name": "TabBoard",
+	"short_name": "TabBoard",
 	"start_url": "./",
 	"display": "standalone",
 	"background_color": "#ebe4d6",
