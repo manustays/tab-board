@@ -4,7 +4,7 @@ import { ADD_MENU } from '../widgets/registry.js';
 
 /** @param {object} props */
 export function TopBar(props) {
-	const { pg, editing, theme, width, accent, onToggleEdit, onToggleTheme, onSetWidth, onSetAccent, onAdd, menus, onOpenMenu } = props;
+	const { pg, editing, theme, width, accent, onToggleEdit, onToggleTheme, onSetWidth, onSetAccent, onAdd, menus, onOpenMenu, syncSupported, syncFolder, onConnectFolder, onDisconnectFolder } = props;
 	const pill = (label, active, on) => h('button', { onClick:on, style:{ border:'none', background:active ? accent : 'transparent', color:active ? '#fff' : pg.mut, borderRadius:9, padding:'7px 11px', font:"500 12px 'Instrument Sans'", cursor:'pointer' } }, label);
 
 	return h('div', { style:{ display:'flex', alignItems:'center', gap:4, position:'relative' } },
@@ -23,7 +23,15 @@ export function TopBar(props) {
 				h('button', { key:m, onClick:() => onSetWidth(m), style:choice(pg, accent, width === m) }, m === 'fixed' ? 'Centered' : 'Full'))),
 			label('Accent', pg),
 			h('div', { style:{ display:'flex', gap:9 } }, ACCENTS.map((c) =>
-				h('button', { key:c, onClick:() => onSetAccent(c), style:{ width:26, height:26, borderRadius:'50%', background:c, border:accent === c ? `2px solid ${pg.fg}` : '2px solid transparent', cursor:'pointer', padding:0 } })))
+				h('button', { key:c, onClick:() => onSetAccent(c), style:{ width:26, height:26, borderRadius:'50%', background:c, border:accent === c ? `2px solid ${pg.fg}` : '2px solid transparent', cursor:'pointer', padding:0 } }))),
+			h('div', { style:{ marginTop:16 } }, label('Folder sync', pg)),
+			!syncSupported
+				? h('div', { style:{ font:"400 12px 'Instrument Sans'", color:pg.mut } }, 'Needs a Chromium browser.')
+				: syncFolder
+					? h('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 } },
+						h('span', { style:{ font:"400 12px 'Instrument Sans'", color:pg.fg, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, syncFolder.name),
+						h('button', { onClick:onDisconnectFolder, style:choice(pg, accent, false) }, 'Disconnect'))
+					: h('button', { onClick:onConnectFolder, style:choice(pg, accent, false) }, 'Connect folder')
 		);
 	}
 	function addMenu() {

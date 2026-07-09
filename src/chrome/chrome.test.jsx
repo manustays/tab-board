@@ -21,4 +21,25 @@ describe('TopBar', () => {
 		fireEvent.click(getByText('Edit'));
 		expect(onToggleEdit).toHaveBeenCalled();
 	});
+	it('settings shows Connect folder when supported and disconnected', async () => {
+		const onConnectFolder = vi.fn();
+		const { getByTitle, getByText } = render(h(TopBar, {
+			pg: pagePalette('light'), editing:false, theme:'light', width:'fixed', accent:'#c96442',
+			onToggleEdit(){}, onToggleTheme(){}, onSetWidth(){}, onSetAccent(){}, onAdd(){},
+			menus:'settings', onOpenMenu(){},
+			syncSupported:true, syncFolder:null, onConnectFolder, onDisconnectFolder(){},
+		}));
+		getByText('Connect folder').click();
+		expect(onConnectFolder).toHaveBeenCalled();
+	});
+	it('settings shows folder name and Disconnect when connected', () => {
+		const { getByText } = render(h(TopBar, {
+			pg: pagePalette('light'), editing:false, theme:'light', width:'fixed', accent:'#c96442',
+			onToggleEdit(){}, onToggleTheme(){}, onSetWidth(){}, onSetAccent(){}, onAdd(){},
+			menus:'settings', onOpenMenu(){},
+			syncSupported:true, syncFolder:{ name:'MyFolder' }, onConnectFolder(){}, onDisconnectFolder(){},
+		}));
+		expect(getByText('MyFolder')).toBeTruthy();
+		expect(getByText('Disconnect')).toBeTruthy();
+	});
 });
