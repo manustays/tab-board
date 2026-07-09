@@ -12,8 +12,18 @@ describe('registry', () => {
 		expect(w.id).toBeTruthy();
 		expect(Array.isArray(w.items)).toBe(true);
 	});
-	it('only exposes v1 types', () => {
-		const allowed = new Set(['bookmarks','single','datetime','divider','spacer']);
+	it('exposes exactly the supported widget types', () => {
+		const allowed = new Set(['bookmarks','single','datetime','divider','spacer','todo','scratchpad','snippets']);
 		for (const [type] of ADD_MENU) expect(allowed.has(type)).toBe(true);
+	});
+	it('registers the content widgets', () => {
+		for (const type of ['todo','scratchpad','snippets']) {
+			expect(WIDGET_COMPONENTS[type]).toBeTruthy();
+			expect(ADD_MENU.some(([t]) => t === type)).toBe(true);
+			const w = newWidget(type, '#c96442');
+			expect(w.type).toBe(type);
+			expect(w.w).toBeGreaterThanOrEqual(2);
+			expect(w.h).toBeGreaterThanOrEqual(1);
+		}
 	});
 });

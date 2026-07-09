@@ -20,4 +20,4 @@ No backend, no accounts. All data lives in your browser's localStorage. Fonts ar
 State persists under localStorage key `nt_dashboard_v1`. See `docs/superpowers/specs/` for the design.
 
 ## Roadmap (post-v1)
-To-do / scratchpad / snippets widgets, local-folder JSON sync, AI-agent write path, third-party widgets.
+Local-folder JSON sync, AI-agent write path, third-party widgets.
