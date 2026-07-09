@@ -22,6 +22,7 @@ export function App() {
 	const [openWidgetMenu, setOpenWidgetMenu] = useState(/** @type {string|null} */(null));
 	const gridEl = useRef(null);
 	const grid = useRef(/** @type {any} */(null));
+	const interacting = useRef(false); // true mid drag/resize — pause grid reconcile
 
 	// tick the clock every 20s
 	useEffect(() => {
@@ -63,10 +64,17 @@ export function App() {
 		// back into state so no widget is ever left with undefined x/y — a
 		// widget with undefined y makes gridstack's row count NaN and collapses
 		// the grid container height to 0.
-		grid.current.on('change added', (_e, nodes) => {
+		const readGeometry = () => {
 			const read = grid.current.engine.nodes.map((n) => ({ id:n.el.getAttribute('gs-id'), x:n.x, y:n.y, w:n.w, h:n.h }));
 			setState((s) => ({ ...s, widgets: mergeGeometry(s.widgets, read) }));
-		});
+		};
+		grid.current.on('change added', readGeometry);
+		// While a drag/resize is live, gridstack owns the DOM. Reconciling
+		// (add/remove/update) mid-interaction makes it spawn a duplicate DOM
+		// node bound to the same widget. Pause reconcile during interaction,
+		// then run one clean sync on stop.
+		grid.current.on('dragstart resizestart', () => { interacting.current = true; });
+		grid.current.on('dragstop resizestop', () => { interacting.current = false; readGeometry(); });
 		return () => grid.current.destroy(false);
 	}, []);
 
@@ -75,7 +83,7 @@ export function App() {
 
 	// reconcile grid items + render content whenever inputs change
 	useEffect(() => {
-		if (!grid.current) return;
+		if (!grid.current || interacting.current) return;
 		syncGrid(grid.current, state.widgets, (contentEl, w) => {
 			const Comp = WIDGET_COMPONENTS[w.type];
 			if (!Comp) return; // corrupt/unknown widget type from stale localStorage: skip rendering
