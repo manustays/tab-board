@@ -32,6 +32,12 @@ export function App() {
 	// persist on any state change
 	useEffect(() => { saveState(state); }, [state]);
 
+	// expose theme to CSS (scrollbars, native controls) via <html> attrs
+	useEffect(() => {
+		document.documentElement.dataset.theme = state.theme;
+		document.documentElement.style.colorScheme = state.theme;
+	}, [state.theme]);
+
 	// flush a pending debounced save before the tab is hidden/closed
 	useEffect(() => {
 		const flush = () => saveState.flush();
