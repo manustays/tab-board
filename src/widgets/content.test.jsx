@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/preact';
 import { h } from 'preact';
 import { Scratchpad } from './Scratchpad.jsx';
 import { Todo } from './Todo.jsx';
+import { Snippets } from './Snippets.jsx';
 
 describe('Scratchpad', () => {
 	it('typing patches text', () => {
@@ -36,5 +37,16 @@ describe('Todo', () => {
 		const { getByLabelText } = render(h(Todo, { w:todoW, editing:false, accent:'#c96442', theme:'light', menuOpen:false, onToggleMenu:vi.fn(), onPatch, onRemove:vi.fn() }));
 		fireEvent.click(getByLabelText('delete task'));
 		expect(onPatch).toHaveBeenCalledWith({ items:[] });
+	});
+});
+
+describe('Snippets', () => {
+	it('clicking a snippet copies its body', () => {
+		const writeText = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+		const w = { id:'1', type:'snippets', title:'Snips', tint:'paper', w:3, items:[{ id:'a', label:'Email', body:'me@x.com' }] };
+		const { getByText } = render(h(Snippets, { w, editing:false, accent:'#c96442', theme:'light', menuOpen:false, onToggleMenu:vi.fn(), onPatch:vi.fn(), onRemove:vi.fn() }));
+		fireEvent.click(getByText('Email'));
+		expect(writeText).toHaveBeenCalledWith('me@x.com');
 	});
 });
