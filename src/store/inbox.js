@@ -51,3 +51,58 @@ export function applyOps(state, raw) {
 	}
 	return { state: applied ? { ...state, widgets } : state, applied, skipped };
 }
+
+/**
+ * The AGENTS.md the app writes into the sync folder so agents working
+ * there self-discover the protocol. Rewritten on every session start.
+ */
+export const AGENTS_DOC = `# TabBoard — agent write path
+
+This folder is a TabBoard sync folder. AI agents can feed content into the
+user's dashboard by writing ops to \`${INBOX_FILE}\` here.
+
+## Files
+
+- \`tabboard.json\` — the full dashboard state. **READ ONLY** for agents: never
+  edit it (the app overwrites it and your change would be lost or clobber the
+  board). Read it to discover widget titles for targeting.
+- \`${INBOX_FILE}\` — your ops file. The app applies it and deletes it the next
+  time the user opens a new tab.
+- \`${AGENTS_FILE}\` — this doc. Rewritten by the app; do not edit.
+
+## Inbox format
+
+Write \`${INBOX_FILE}\` as a JSON object with an \`ops\` array:
+
+\`\`\`json
+{
+	"ops": [
+		{ "op": "todo.add", "text": "Buy milk", "widget": "Work" },
+		{ "op": "note.append", "text": "Morning summary…" }
+	]
+}
+\`\`\`
+
+## Ops
+
+- \`todo.add\` — appends one to-do item to a to-do widget. \`text\` (required):
+  the item label.
+- \`note.append\` — appends a line to a notes/scratchpad widget. \`text\`
+  (required): the text to add (a newline is inserted before it when the note
+  is not empty).
+
+**Targeting:** ops land in the first widget of the matching type. To pick a
+specific widget, set \`"widget"\` to its title (case-insensitive) — widget
+titles are visible in \`tabboard.json\` under \`widgets[].title\`. If nothing
+matches, the op is skipped.
+
+## Rules
+
+- If \`${INBOX_FILE}\` already exists, **append** your ops to its \`ops\`
+  array — do not overwrite it (a previous agent's ops may still be pending).
+- \`text\` must be a non-empty string. Malformed ops are skipped; valid ones
+  in the same file still apply.
+- Ops are additive content only. There is no delete, edit, or layout op.
+- Ops take effect the next time the user opens a new tab — do not wait for
+  or verify immediate application.
+`;

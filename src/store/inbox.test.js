@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyOps } from './inbox.js';
+import { applyOps, AGENTS_DOC, INBOX_FILE } from './inbox.js';
 
 /** Fresh three-widget board: two todos + one scratchpad. */
 function makeState() {
@@ -72,5 +72,18 @@ describe('applyOps', () => {
 		const snapshot = JSON.parse(JSON.stringify(input));
 		applyOps(input, { ops:[{ op:'todo.add', text:'Buy milk' }, { op:'note.append', text:'hi' }] });
 		expect(input).toEqual(snapshot);
+	});
+});
+
+describe('AGENTS_DOC', () => {
+	// Drift guard: the doc must reference the real filenames and op names.
+	it('documents both ops and the inbox filename', () => {
+		expect(AGENTS_DOC).toContain(INBOX_FILE);
+		expect(AGENTS_DOC).toContain('todo.add');
+		expect(AGENTS_DOC).toContain('note.append');
+		expect(AGENTS_DOC).toContain('tabboard.json');
+	});
+	it('warns agents never to edit tabboard.json', () => {
+		expect(AGENTS_DOC.toLowerCase()).toContain('read only');
 	});
 });
