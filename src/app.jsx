@@ -1,7 +1,8 @@
 import { h, render as prender } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { loadState, saveState, migrate } from './store/store.js';
-import { isSupported, connect, restore, disconnect, readState, writeState } from './store/sync.js';
+import { isSupported, connect, restore, disconnect, readState, writeState, readInbox, clearInbox, writeAgentsDoc } from './store/sync.js';
+import { applyOps } from './store/inbox.js';
 import { pagePalette } from './theme/palettes.js';
 import { WIDGET_COMPONENTS, newWidget } from './widgets/registry.js';
 import { initGrid, syncGrid } from './grid/grid.js';
@@ -37,7 +38,7 @@ export function App() {
 	// persist on any state change
 	useEffect(() => { saveState(state); }, [state]);
 
-	// one-shot: restore a connected folder and adopt its file if newer
+	// one-shot: restore a connected folder, adopt its file if newer, consume agent inbox
 	useEffect(() => {
 		let cancelled = false;
 		(async () => {
@@ -49,6 +50,12 @@ export function App() {
 					if (!cancelled && raw) {
 						const fileState = migrate(raw);
 						setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
+					}
+					writeAgentsDoc(conn.handle); // keep the protocol doc current (fire-and-forget)
+					const inbox = await readInbox(conn.handle);
+					if (!cancelled) {
+						if (inbox) setState((s) => applyOps(s, inbox).state);
+						clearInbox(conn.handle); // consumed — or corrupt; either way discard
 					}
 				}
 			}
@@ -150,6 +157,7 @@ export function App() {
 			const fileState = migrate(raw);
 			setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
 		}
+		writeAgentsDoc(conn.handle); // protocol doc appears immediately on first connect
 		setSyncFolder(conn);
 	};
 	const onDisconnectFolder = async () => { await disconnect(); setSyncFolder(null); };

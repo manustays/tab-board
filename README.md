@@ -12,6 +12,7 @@ Drop it in as your browser's new-tab page and arrange the widgets you actually u
 - **Private by default** — no backend, no accounts, no analytics. All data stays in your browser's `localStorage`.
 - **Themeable** — warm, paper-toned palettes with light/dark support and self-hosted fonts (no Google Fonts call).
 - **Folder sync** — optionally connect a local folder (Chromium browsers); TabBoard mirrors its state to `tabboard.json` there and reloads from it on start. Point it at a cloud-synced folder for backendless cross-device sync.
+- **Agent write path** — with folder sync connected, AI agents can push to-dos and notes onto the board by writing ops to `tabboard-inbox.json` in the folder; TabBoard applies them on load and documents the protocol in an `AGENTS.md` it writes there.
 
 ## Quick start
 
@@ -46,7 +47,6 @@ State persists to `localStorage` under `nt_dashboard_v1`. Widgets are declared i
 
 ## Roadmap
 
-- AI-agent write path
 - Third-party widgets
 
 ## Contributing
