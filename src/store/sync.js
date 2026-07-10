@@ -3,6 +3,8 @@
  * Every function is a no-throw boundary: failures return null/false, never throw.
  */
 
+import { INBOX_FILE, AGENTS_FILE, AGENTS_DOC } from './inbox.js';
+
 export const FILE_NAME = 'tabboard.json';
 
 /** @returns {boolean} true when the browser supports directory pickers. */
@@ -10,14 +12,10 @@ export function isSupported() {
 	return typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function';
 }
 
-/**
- * Read and parse tabboard.json from a directory handle.
- * @param {any} dirHandle
- * @returns {Promise<object|null>} parsed blob, or null if missing/empty/corrupt.
- */
-export async function readState(dirHandle) {
+/** Read a file's text from a directory handle and JSON-parse it. */
+async function readJson(dirHandle, name) {
 	try {
-		const fileHandle = await dirHandle.getFileHandle(FILE_NAME);
+		const fileHandle = await dirHandle.getFileHandle(name);
 		const file = await fileHandle.getFile();
 		const text = await file.text();
 		if (!text) return null;
@@ -27,22 +25,64 @@ export async function readState(dirHandle) {
 	}
 }
 
+/** Write text to a named file in a directory handle, creating it if needed. */
+async function writeFile(dirHandle, name, text) {
+	try {
+		const fileHandle = await dirHandle.getFileHandle(name, { create:true });
+		const writable = await fileHandle.createWritable();
+		await writable.write(text);
+		await writable.close();
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
+/**
+ * Read and parse tabboard.json from a directory handle.
+ * @param {any} dirHandle
+ * @returns {Promise<object|null>} parsed blob, or null if missing/empty/corrupt.
+ */
+export function readState(dirHandle) {
+	return readJson(dirHandle, FILE_NAME);
+}
+
 /**
  * Write state as tabboard.json into a directory handle.
  * @param {any} dirHandle
  * @param {object} state
  * @returns {Promise<boolean>} true on success.
  */
-export async function writeState(dirHandle, state) {
-	try {
-		const fileHandle = await dirHandle.getFileHandle(FILE_NAME, { create:true });
-		const writable = await fileHandle.createWritable();
-		await writable.write(JSON.stringify(state));
-		await writable.close();
-		return true;
-	} catch (e) {
-		return false;
-	}
+export function writeState(dirHandle, state) {
+	return writeFile(dirHandle, FILE_NAME, JSON.stringify(state));
+}
+
+/**
+ * Read and parse the agent inbox file.
+ * @param {any} dirHandle
+ * @returns {Promise<object|null>} parsed ops blob, or null if missing/empty/corrupt.
+ */
+export function readInbox(dirHandle) {
+	return readJson(dirHandle, INBOX_FILE);
+}
+
+/**
+ * Delete the agent inbox file (consumed, or corrupt and being discarded).
+ * Missing file is a no-op.
+ * @param {any} dirHandle
+ * @returns {Promise<void>}
+ */
+export async function clearInbox(dirHandle) {
+	try { await dirHandle.removeEntry(INBOX_FILE); } catch (e) { /* absent: fine */ }
+}
+
+/**
+ * Write the agent protocol doc (AGENTS.md) into the folder, overwriting.
+ * @param {any} dirHandle
+ * @returns {Promise<boolean>} true on success.
+ */
+export function writeAgentsDoc(dirHandle) {
+	return writeFile(dirHandle, AGENTS_FILE, AGENTS_DOC);
 }
 
 const IDB_NAME = 'tabboard-sync';

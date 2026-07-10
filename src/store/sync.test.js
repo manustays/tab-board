@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { isSupported, readState, writeState, FILE_NAME, connect, restore, disconnect, __setHandleStorage } from './sync.js';
+import { isSupported, readState, writeState, FILE_NAME, connect, restore, disconnect, __setHandleStorage, readInbox, clearInbox, writeAgentsDoc } from './sync.js';
+import { INBOX_FILE, AGENTS_FILE, AGENTS_DOC } from './inbox.js';
 
-// Minimal fakes for the File System Access API.
+// Minimal fakes for the File System Access API. `files` maps name → { data }.
 function fakeWritable(sink) {
 	return { write: (data) => { sink.data = data; }, close: async () => {} };
 }
@@ -11,13 +12,18 @@ function fakeFileHandle(store) {
 		getFile: async () => ({ text: async () => store.data ?? '' }),
 	};
 }
-// throwOnGet simulates a missing file; the real API rejects getFileHandle without {create}.
-function fakeDir({ store = {}, throwOnGet = false } = {}) {
+function fakeDir(files = {}) {
 	return {
+		files,
 		getFileHandle: async (name, opts) => {
-			expect(name).toBe(FILE_NAME);
-			if (throwOnGet && !opts?.create) throw new Error('NotFound');
-			return fakeFileHandle(store);
+			// real API rejects getFileHandle for a missing file without {create}
+			if (!(name in files) && !opts?.create) throw new Error('NotFound');
+			files[name] = files[name] || {};
+			return fakeFileHandle(files[name]);
+		},
+		removeEntry: async (name) => {
+			if (!(name in files)) throw new Error('NotFound');
+			delete files[name];
 		},
 	};
 }
@@ -27,21 +33,21 @@ describe('sync file io', () => {
 		expect(typeof isSupported()).toBe('boolean');
 	});
 	it('writeState serializes state to the file', async () => {
-		const store = {};
-		const ok = await writeState(fakeDir({ store }), { name:'Zed', updatedAt:5 });
+		const files = {};
+		const ok = await writeState(fakeDir(files), { name:'Zed', updatedAt:5 });
 		expect(ok).toBe(true);
-		expect(JSON.parse(store.data)).toEqual({ name:'Zed', updatedAt:5 });
+		expect(JSON.parse(files[FILE_NAME].data)).toEqual({ name:'Zed', updatedAt:5 });
 	});
 	it('readState parses a written file', async () => {
-		const store = { data: JSON.stringify({ name:'Zed', updatedAt:5 }) };
-		expect(await readState(fakeDir({ store }))).toEqual({ name:'Zed', updatedAt:5 });
+		const files = { [FILE_NAME]: { data: JSON.stringify({ name:'Zed', updatedAt:5 }) } };
+		expect(await readState(fakeDir(files))).toEqual({ name:'Zed', updatedAt:5 });
 	});
 	it('readState returns null when the file is missing', async () => {
-		expect(await readState(fakeDir({ throwOnGet:true }))).toBe(null);
+		expect(await readState(fakeDir())).toBe(null);
 	});
 	it('readState returns null on empty or corrupt json', async () => {
-		expect(await readState(fakeDir({ store:{ data:'' } }))).toBe(null);
-		expect(await readState(fakeDir({ store:{ data:'{ not json' } }))).toBe(null);
+		expect(await readState(fakeDir({ [FILE_NAME]: { data:'' } }))).toBe(null);
+		expect(await readState(fakeDir({ [FILE_NAME]: { data:'{ not json' } }))).toBe(null);
 	});
 	it('writeState returns false when the handle throws', async () => {
 		const bad = { getFileHandle: async () => { throw new Error('denied'); } };
@@ -102,5 +108,34 @@ describe('sync connect/restore/disconnect', () => {
 		await disconnect();
 		expect(await restore()).toBe(null);
 		__setHandleStorage(null);
+	});
+});
+
+describe('agent inbox io', () => {
+	it('readInbox parses a valid inbox file', async () => {
+		const files = { [INBOX_FILE]: { data: JSON.stringify({ ops:[{ op:'todo.add', text:'x' }] }) } };
+		expect(await readInbox(fakeDir(files))).toEqual({ ops:[{ op:'todo.add', text:'x' }] });
+	});
+	it('readInbox returns null when missing, empty, or corrupt', async () => {
+		expect(await readInbox(fakeDir())).toBe(null);
+		expect(await readInbox(fakeDir({ [INBOX_FILE]: { data:'' } }))).toBe(null);
+		expect(await readInbox(fakeDir({ [INBOX_FILE]: { data:'{ nope' } }))).toBe(null);
+	});
+	it('clearInbox removes the inbox file', async () => {
+		const files = { [INBOX_FILE]: { data:'{}' } };
+		await clearInbox(fakeDir(files));
+		expect(INBOX_FILE in files).toBe(false);
+	});
+	it('clearInbox does not throw when the file is absent', async () => {
+		await expect(clearInbox(fakeDir())).resolves.toBeUndefined();
+	});
+	it('writeAgentsDoc writes AGENTS_DOC to AGENTS.md', async () => {
+		const files = {};
+		expect(await writeAgentsDoc(fakeDir(files))).toBe(true);
+		expect(files[AGENTS_FILE].data).toBe(AGENTS_DOC);
+	});
+	it('writeAgentsDoc returns false when the handle throws', async () => {
+		const bad = { getFileHandle: async () => { throw new Error('denied'); } };
+		expect(await writeAgentsDoc(bad)).toBe(false);
 	});
 });
