@@ -52,6 +52,9 @@ export function App() {
 						setState((local) => fileState.updatedAt > local.updatedAt ? fileState : local);
 					}
 					writeAgentsDoc(conn.handle); // keep the protocol doc current (fire-and-forget)
+					// ponytail: read-then-delete is not atomic — two tabs opening at once can
+					// double-apply the inbox. Multi-agent coordination is out of scope (spec);
+					// localStorage backstops loss.
 					const inbox = await readInbox(conn.handle);
 					if (!cancelled) {
 						if (inbox) setState((s) => applyOps(s, inbox).state);

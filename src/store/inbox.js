@@ -43,9 +43,10 @@ export function applyOps(state, raw) {
 			&& typeof op.text === 'string' && op.text.trim();
 		const target = valid ? findTarget(widgets, op) : null;
 		if (!target) { skipped++; continue; }
+		const text = op.text.trim(); // stored trimmed, matching the widgets' own add paths
 		const patch = op.op === 'todo.add'
-			? { items: (target.items || []).concat({ id: uid(), text: op.text, done: false }) }
-			: { text: target.text ? target.text + '\n' + op.text : op.text };
+			? { items: (target.items || []).concat({ id: uid(), text, done: false }) }
+			: { text: target.text ? target.text + '\n' + text : text };
 		widgets = widgets.map((w) => w === target ? { ...w, ...patch } : w);
 		applied++;
 	}

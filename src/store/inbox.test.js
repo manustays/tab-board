@@ -24,6 +24,10 @@ describe('applyOps', () => {
 		expect(typeof items[1].id).toBe('string');
 		expect(items[1].id).not.toBe('');
 	});
+	it('trims op text before storing, like the widgets\' own add paths', () => {
+		const { state } = applyOps(makeState(), { ops:[{ op:'todo.add', text:'  Buy milk  ' }] });
+		expect(state.widgets[0].items[1].text).toBe('Buy milk');
+	});
 	it('widget field targets by title, case-insensitively', () => {
 		const { state } = applyOps(makeState(), { ops:[{ op:'todo.add', text:'Mow lawn', widget:'home' }] });
 		expect(state.widgets[0].items).toHaveLength(1); // untouched
