@@ -5,6 +5,7 @@ import { isSupported, connect, restore, disconnect, readState, writeState, readI
 import { applyOps } from './store/inbox.js';
 import { pagePalette } from './theme/palettes.js';
 import { WIDGET_COMPONENTS, newWidget } from './widgets/registry.js';
+import { moveItem } from './widgets/dnd.js';
 import { initGrid, syncGrid } from './grid/grid.js';
 import { mergeGeometry } from './grid/serialize.js';
 import { Header } from './chrome/Header.jsx';
@@ -115,6 +116,9 @@ export function App() {
 	const patchWidget = (id, partial) => setState((s) => ({ ...s, widgets: s.widgets.map((w) => w.id === id ? { ...w, ...partial } : w) }));
 	const removeWidget = (id) => { setState((s) => ({ ...s, widgets: s.widgets.filter((w) => w.id !== id) })); setOpenWidgetMenu(null); };
 	const addWidget = (type) => { setState((s) => ({ ...s, widgets: s.widgets.concat(newWidget(type, s.accent)) })); setMenus(null); };
+	// item drag-and-drop: source and target widgets are separate Preact roots, so
+	// the move has to be applied here, where both live in one state update.
+	const moveWidgetItem = (from, itemId, to, index) => setState((s) => ({ ...s, widgets: moveItem(s.widgets, from, itemId, to, index) }));
 
 	// init gridstack once
 	useEffect(() => {
@@ -149,7 +153,7 @@ export function App() {
 			if (!Comp) return; // corrupt/unknown widget type from stale localStorage: skip rendering
 			const common = { w, editing, accent:state.accent, theme:state.theme,
 				menuOpen: openWidgetMenu === w.id, onToggleMenu:() => setOpenWidgetMenu(openWidgetMenu === w.id ? null : w.id),
-				onPatch:(partial) => patchWidget(w.id, partial), onRemove:() => removeWidget(w.id), now };
+				onPatch:(partial) => patchWidget(w.id, partial), onRemove:() => removeWidget(w.id), onMoveItem:moveWidgetItem, now };
 			const handle = editing ? h('span', { class:'nt-drag', style:{ position:'absolute', top:8, left:8, zIndex:6, color:'#999', fontSize:13 } }, '⠿') : null;
 			prender(h('div', { style:{ position:'relative', height:'100%' } }, handle, h(Comp, common)), contentEl);
 		});
@@ -193,7 +197,7 @@ export function App() {
 			),
 			h('div', { class:'grid-stack', ref:gridEl }),
 			h('div', { style:{ marginTop:40, font:"400 12px 'Instrument Sans'", color:pg.head, textAlign:'center' } },
-				editing ? 'Drag ⠿ to move · drag the corner to resize · ••• for background & icons' : 'Click Edit to rearrange, resize and restyle your widgets')
+				editing ? 'Drag ⠿ to move · drag the corner to resize · drag items to reorder · ••• for background & icons' : 'Click Edit to rearrange, resize and restyle your widgets')
 		)
 	);
 }

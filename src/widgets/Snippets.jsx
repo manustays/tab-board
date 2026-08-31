@@ -4,16 +4,18 @@ import { Card } from './Card.jsx';
 import { tintPalette } from '../theme/palettes.js';
 import { uid } from '../store/store.js';
 import { askFields } from './prompt.jsx';
+import { useItemDnd } from './dnd.js';
 
 /**
  * Copy-to-clipboard snippet list. Live: click to copy. Edit mode: add/edit/delete.
  * @param {object} props
  */
 export function Snippets(props) {
-	const { w, editing, accent, theme, menuOpen, onToggleMenu, onPatch, onRemove } = props;
+	const { w, editing, accent, theme, menuOpen, onToggleMenu, onPatch, onRemove, onMoveItem } = props;
 	const p = tintPalette(w.tint, theme);
 	const items = w.items || [];
 	const [copied, setCopied] = useState(null);
+	const dnd = useItemDnd({ kind:'snippets', widgetId:w.id, items, onMoveItem, enabled:editing, accent });
 
 	function copy(it) {
 		if (!navigator.clipboard) return;
@@ -36,7 +38,8 @@ export function Snippets(props) {
 		onPatch({ items: items.filter((x) => x.id !== it.id) });
 	}
 
-	const rows = items.map((it) => h('div', { key:it.id, style:{ display:'flex', alignItems:'center', gap:8, padding:'7px 0' } },
+	const rows = items.map((it, i) => h('div', { key:it.id, ...dnd.rowProps(it, i),
+		style:{ display:'flex', alignItems:'center', gap:8, padding:'7px 0', cursor:editing ? 'grab' : 'default', ...dnd.markStyle(i) } },
 		h('button', { onClick:() => copy(it), style:{ flex:1, textAlign:'left', border:'none', background:'transparent', cursor:'pointer', padding:0, minWidth:0 } },
 			h('div', { style:{ font:"500 13px 'Instrument Sans'", color:p.fg } }, copied === it.id ? 'Copied' : it.label),
 			h('div', { style:{ font:"400 12px 'Spline Sans Mono',monospace", color:p.mut, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, it.body)),
@@ -45,10 +48,11 @@ export function Snippets(props) {
 			h('button', { onClick:() => del(it), 'aria-label':'delete snippet', style:miniBtn('#c0603f') }, '×')) : null
 	));
 
+	// the add row doubles as the drop caret for "past the last snippet"
 	const addBtn = editing ? h('button', { key:'add', onClick:() => edit(null),
-		style:{ display:'flex', alignItems:'center', gap:8, padding:'7px 0', border:'none', background:'transparent', cursor:'pointer', width:'100%', color:p.mut, font:"400 13px 'Instrument Sans'" } }, '+ Add snippet') : null;
+		style:{ display:'flex', alignItems:'center', gap:8, padding:'7px 0', border:'none', background:'transparent', cursor:'pointer', width:'100%', color:p.mut, font:"400 13px 'Instrument Sans'", ...dnd.markStyle(items.length) } }, '+ Add snippet') : null;
 
-	const children = h('div', { style:{ display:'flex', flexDirection:'column' } }, rows.concat(addBtn ? [addBtn] : []));
+	const children = h('div', { ...dnd.zoneProps, style:{ display:'flex', flexDirection:'column', minHeight:26 } }, rows.concat(addBtn ? [addBtn] : []));
 	return h(Card, { w, p, editing, accent, theme, menuOpen, onToggleMenu, onPatch, onRemove, children });
 }
 

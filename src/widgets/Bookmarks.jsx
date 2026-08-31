@@ -4,15 +4,17 @@ import { Icon } from './icon.jsx';
 import { tintPalette } from '../theme/palettes.js';
 import { uid } from '../store/store.js';
 import { askFields } from './prompt.jsx';
+import { useItemDnd } from './dnd.js';
 
 /**
  * Bookmark grid or list widget supporting add/edit/delete and icon mode selector.
  * @param {object} props
  */
 export function Bookmarks(props) {
-	const { w, editing, accent, theme, menuOpen, onToggleMenu, onPatch, onRemove } = props;
+	const { w, editing, accent, theme, menuOpen, onToggleMenu, onPatch, onRemove, onMoveItem } = props;
 	const p = tintPalette(w.tint, theme);
 	const grid = w.layout === 'grid';
+	const dnd = useItemDnd({ kind:'bookmarks', widgetId:w.id, items:w.items, onMoveItem, enabled:editing, accent });
 
 	/** @param {object|null} it existing item, or null to add */
 	async function editItem(it) {
@@ -34,26 +36,30 @@ export function Bookmarks(props) {
 		h('button', { onClick:(e) => { e.preventDefault(); del(it); }, style:miniBtn(p, '#c0603f') }, '×')
 	) : null;
 
-	const items = w.items.map((it) => grid
-		? h('a', { key:it.id, href:it.url, style:{ display:'flex', flexDirection:'column', alignItems:'center', gap:9, textDecoration:'none', position:'relative' } },
+	// a wrapped icon grid reads left-to-right, so its drop caret splits on X, not Y
+	const items = w.items.map((it, i) => grid
+		? h('a', { key:it.id, href:it.url, ...dnd.rowProps(it, i, true),
+			style:{ display:'flex', flexDirection:'column', alignItems:'center', gap:9, textDecoration:'none', position:'relative', ...dnd.markStyle(i, true) } },
 			h(Icon, { item:it, size:46, mode:w.icon, p }),
 			h('span', { style:{ font:"400 12px 'Instrument Sans'", color:p.mut, maxWidth:64, textAlign:'center', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, it.label),
 			editControls(it))
-		: h('a', { key:it.id, href:it.url, style:{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', textDecoration:'none', position:'relative' } },
+		: h('a', { key:it.id, href:it.url, ...dnd.rowProps(it, i, false),
+			style:{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', textDecoration:'none', position:'relative', ...dnd.markStyle(i, false) } },
 			h(Icon, { item:it, size:26, mode:w.icon, p }),
 			h('span', { style:{ font:"400 14px 'Instrument Sans'", color:p.fg } }, it.label),
 			editControls(it)));
 
+	// the add row doubles as the drop caret for "past the last item"
 	const addBtn = editing ? h('button', { key:'add', onClick:() => editItem(null),
-		style: grid ? { display:'flex', flexDirection:'column', alignItems:'center', gap:9, border:'none', background:'transparent', cursor:'pointer' }
-			: { display:'flex', alignItems:'center', gap:12, padding:'8px 0', border:'none', background:'transparent', cursor:'pointer', width:'100%' } },
+		style: grid ? { display:'flex', flexDirection:'column', alignItems:'center', gap:9, border:'none', background:'transparent', cursor:'pointer', ...dnd.markStyle(w.items.length, true) }
+			: { display:'flex', alignItems:'center', gap:12, padding:'8px 0', border:'none', background:'transparent', cursor:'pointer', width:'100%', ...dnd.markStyle(w.items.length, false) } },
 		h('div', { style:{ width:grid ? 46 : 26, height:grid ? 46 : 26, borderRadius:grid ? 15 : 8, border:`1.5px dashed ${p.mut}`, display:'flex', alignItems:'center', justifyContent:'center', color:p.mut, fontSize:grid ? 20 : 15, flex:'none' } }, '+'),
 		h('span', { style:{ font:"400 " + (grid ? 12 : 14) + "px 'Instrument Sans'", color:p.mut } }, grid ? 'Add' : 'Add bookmark')
 	) : null;
 
 	const body = grid
-		? h('div', { style:{ display:'flex', flexWrap:'wrap', gap:'18px 20px' } }, items.concat(addBtn ? [addBtn] : []))
-		: h('div', { style:{ display:'flex', flexDirection:'column' } }, items.concat(addBtn ? [addBtn] : []));
+		? h('div', { ...dnd.zoneProps, style:{ display:'flex', flexWrap:'wrap', gap:'18px 20px', minHeight:46 } }, items.concat(addBtn ? [addBtn] : []))
+		: h('div', { ...dnd.zoneProps, style:{ display:'flex', flexDirection:'column', minHeight:26 } }, items.concat(addBtn ? [addBtn] : []));
 
 	// icon-mode selector injected into the Card menu
 	const extraMenu = () => h('div', { style:{ padding:'8px 12px' } },
