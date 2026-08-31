@@ -47,6 +47,10 @@ State persists to `localStorage` under `nt_dashboard_v1`. Widgets are declared i
 
 ## Roadmap
 
+- **iFrame widget** — embed a webpage inside a widget.
+- **Markdown in scratchpad** — render notes/scratchpad content as Markdown.
+- **Timer / countdown widget** — with a label/message, and a fullscreen mode.
+- **Fullscreen widgets** — let selected widgets expand to fill the board.
 - Third-party widgets
 
 ## Contributing
