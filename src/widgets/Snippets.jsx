@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { Card } from './Card.jsx';
 import { tintPalette } from '../theme/palettes.js';
 import { uid } from '../store/store.js';
+import { askFields } from './prompt.jsx';
 
 /**
  * Copy-to-clipboard snippet list. Live: click to copy. Edit mode: add/edit/delete.
@@ -22,11 +23,14 @@ export function Snippets(props) {
 		}).catch(() => { /* insecure context / denied: no feedback */ });
 	}
 	/** @param {object|null} it existing snippet, or null to add */
-	function edit(it) {
-		const label = window.prompt('Label', it ? it.label : ''); if (label === null) return;
-		const body = window.prompt('Snippet text', it ? it.body : ''); if (body === null) return;
-		if (it) onPatch({ items: items.map((x) => x.id === it.id ? { ...x, label, body } : x) });
-		else onPatch({ items: items.concat({ id: uid(), label, body }) });
+	async function edit(it) {
+		const v = await askFields(it ? 'Edit snippet' : 'New snippet', [
+			{ key:'label', label:'Label', value: it ? it.label : '' },
+			{ key:'body', label:'Snippet text', value: it ? it.body : '', type:'textarea' },
+		], p);
+		if (!v) return;
+		if (it) onPatch({ items: items.map((x) => x.id === it.id ? { ...x, label:v.label, body:v.body } : x) });
+		else onPatch({ items: items.concat({ id: uid(), label:v.label, body:v.body }) });
 	}
 	function del(it) {
 		onPatch({ items: items.filter((x) => x.id !== it.id) });

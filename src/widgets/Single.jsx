@@ -2,9 +2,10 @@ import { h } from 'preact';
 import { Card } from './Card.jsx';
 import { Icon } from './icon.jsx';
 import { tintPalette } from '../theme/palettes.js';
+import { askFields } from './prompt.jsx';
 
 /**
- * Highlight bookmark tile with edit via window.prompt.
+ * Highlight bookmark tile with edit via a modal field prompt.
  * @param {object} props
  */
 export function Single(props) {
@@ -12,11 +13,14 @@ export function Single(props) {
 	const p = tintPalette(w.tint, theme);
 	const it = w.item || {};
 
-	function edit() {
-		const label = window.prompt('Name', it.label); if (label === null) return;
-		const url = window.prompt('URL', it.url || 'https://'); if (url === null) return;
-		const sub = window.prompt('Subtitle (optional)', it.sub || '');
-		onPatch({ item: { ...it, label, url, sub: sub || '', ini:(label.trim()[0] || '•').toUpperCase(), color:it.color || accent } });
+	async function edit() {
+		const v = await askFields('Edit bookmark', [
+			{ key:'label', label:'Name', value: it.label || '' },
+			{ key:'url', label:'URL', value: it.url || '', type:'url' },
+			{ key:'sub', label:'Subtitle (optional)', value: it.sub || '', optional:true },
+		], p);
+		if (!v) return;
+		onPatch({ item: { ...it, label:v.label, url:v.url, sub:v.sub, ini:(v.label[0] || '•').toUpperCase(), color:it.color || accent } });
 	}
 
 	const children = [

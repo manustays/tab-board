@@ -3,6 +3,7 @@ import { Card } from './Card.jsx';
 import { Icon } from './icon.jsx';
 import { tintPalette } from '../theme/palettes.js';
 import { uid } from '../store/store.js';
+import { askFields } from './prompt.jsx';
 
 /**
  * Bookmark grid or list widget supporting add/edit/delete and icon mode selector.
@@ -14,14 +15,15 @@ export function Bookmarks(props) {
 	const grid = w.layout === 'grid';
 
 	/** @param {object|null} it existing item, or null to add */
-	function editItem(it) {
-		const label = window.prompt('Bookmark name', it ? it.label : '');
-		if (label === null) return;
-		const url = window.prompt('URL', it ? it.url : 'https://');
-		if (url === null) return;
-		const ini = (label.trim()[0] || '•').toUpperCase();
-		if (it) onPatch({ items: w.items.map((x) => x.id === it.id ? { ...x, label, url, ini } : x) });
-		else onPatch({ items: w.items.concat({ id:uid(), label, url, color:accent, ini }) });
+	async function editItem(it) {
+		const v = await askFields(it ? 'Edit bookmark' : 'New bookmark', [
+			{ key:'label', label:'Name', value: it ? it.label : '' },
+			{ key:'url', label:'URL', value: it ? it.url : '', type:'url' },
+		], p);
+		if (!v) return;
+		const ini = (v.label[0] || '•').toUpperCase();
+		if (it) onPatch({ items: w.items.map((x) => x.id === it.id ? { ...x, label:v.label, url:v.url, ini } : x) });
+		else onPatch({ items: w.items.concat({ id:uid(), label:v.label, url:v.url, color:accent, ini }) });
 	}
 	function del(it) {
 		onPatch({ items: w.items.filter((x) => x.id !== it.id) });
