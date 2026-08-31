@@ -41,6 +41,12 @@ describe('store', () => {
 		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[] }));
 		expect(loadState().updatedAt).toBe(0);
 	});
+	it('migrate defaults newTab off and preserves it when set', () => {
+		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[] }));
+		expect(loadState().newTab).toBe(false);
+		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[], newTab:true }));
+		expect(loadState().newTab).toBe(true);
+	});
 	it('migrate preserves a provided updatedAt', () => {
 		localStorage.setItem('nt_dashboard_v1', JSON.stringify({ theme:'light', widgets:[], updatedAt:1234 }));
 		expect(loadState().updatedAt).toBe(1234);

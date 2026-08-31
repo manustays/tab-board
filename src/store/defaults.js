@@ -18,6 +18,7 @@ export function defaultState() {
 		width: 'fixed',
 		accent: '#c96442',
 		name: 'there',
+		newTab: false,
 		widgets: [
 			{ id: uid(), type:'datetime', title:'', tint:'paper', x:0, y:0, w:3, h:2 },
 			{ id: uid(), type:'bookmarks', title:'Daily', layout:'grid', icon:'mono', tint:'paper', x:3, y:0, w:5, h:3, items:[

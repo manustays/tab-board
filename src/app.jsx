@@ -83,6 +83,16 @@ export function App() {
 		document.documentElement.style.colorScheme = state.theme;
 	}, [state.theme]);
 
+	// ponytail: one <base target> beats threading a prop into every anchor —
+	// covers current and future link widgets. No href is set, so relative URL
+	// resolution is untouched.
+	useEffect(() => {
+		let tag = document.head.querySelector('base');
+		if (!state.newTab) { if (tag) tag.remove(); return; }
+		if (!tag) { tag = document.createElement('base'); document.head.appendChild(tag); }
+		tag.target = '_blank';
+	}, [state.newTab]);
+
 	// flush a pending debounced save before the tab is hidden/closed
 	useEffect(() => {
 		const flush = () => {
@@ -172,11 +182,12 @@ export function App() {
 		h('div', { style:{ maxWidth:maxW, margin:'0 auto', padding:'clamp(28px,5vw,56px) clamp(20px,4vw,48px) 80px' } },
 			h('div', { style:{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:24, flexWrap:'wrap', marginBottom:'clamp(28px,4vw,44px)' } },
 				h(Header, { pg, name:state.name, now, editing, onName:(v) => setState((s) => ({ ...s, name:v })) }),
-				h(TopBar, { pg, editing, theme:state.theme, width:state.width, accent:state.accent,
+				h(TopBar, { pg, editing, theme:state.theme, width:state.width, accent:state.accent, newTab:state.newTab,
 					onToggleEdit:() => { setEditing((v) => !v); setOpenWidgetMenu(null); },
 					onToggleTheme:() => setState((s) => ({ ...s, theme:s.theme === 'dark' ? 'light' : 'dark' })),
 					onSetWidth:(m) => setState((s) => ({ ...s, width:m })),
 					onSetAccent:(c) => setState((s) => ({ ...s, accent:c })),
+					onSetNewTab:(v) => setState((s) => ({ ...s, newTab:v })),
 					onAdd:addWidget, menus, onOpenMenu:setMenus,
 					syncSupported: isSupported(), syncFolder, onConnectFolder, onDisconnectFolder })
 			),

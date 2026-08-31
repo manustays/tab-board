@@ -4,7 +4,7 @@ import { ADD_MENU } from '../widgets/registry.js';
 
 /** @param {object} props */
 export function TopBar(props) {
-	const { pg, editing, theme, width, accent, onToggleEdit, onToggleTheme, onSetWidth, onSetAccent, onAdd, menus, onOpenMenu, syncSupported, syncFolder, onConnectFolder, onDisconnectFolder } = props;
+	const { pg, editing, theme, width, accent, newTab, onToggleEdit, onToggleTheme, onSetWidth, onSetAccent, onSetNewTab, onAdd, menus, onOpenMenu, syncSupported, syncFolder, onConnectFolder, onDisconnectFolder } = props;
 	const pill = (label, active, on) => h('button', { onClick:on, style:{ border:'none', background:active ? accent : 'transparent', color:active ? '#fff' : pg.mut, borderRadius:9, padding:'7px 11px', font:"500 12px 'Instrument Sans'", cursor:'pointer' } }, label);
 
 	return h('div', { style:{ display:'flex', alignItems:'center', gap:4, position:'relative' } },
@@ -21,6 +21,9 @@ export function TopBar(props) {
 			label('Container width', pg),
 			h('div', { style:{ display:'flex', gap:7, marginBottom:16 } }, ['fixed','full'].map((m) =>
 				h('button', { key:m, onClick:() => onSetWidth(m), style:choice(pg, accent, width === m) }, m === 'fixed' ? 'Centered' : 'Full'))),
+			label('Open links', pg),
+			h('div', { style:{ display:'flex', gap:7, marginBottom:16 } }, [[false,'Same tab'],[true,'New tab']].map(([v, l]) =>
+				h('button', { key:l, onClick:() => onSetNewTab(v), style:choice(pg, accent, newTab === v) }, l))),
 			label('Accent', pg),
 			h('div', { style:{ display:'flex', gap:9 } }, ACCENTS.map((c) =>
 				h('button', { key:c, onClick:() => onSetAccent(c), style:{ width:26, height:26, borderRadius:'50%', background:c, border:accent === c ? `2px solid ${pg.fg}` : '2px solid transparent', cursor:'pointer', padding:0 } }))),
